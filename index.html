@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>English Speed Reading 3: Potato Chips</title>
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+        }
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- Icons ---
+        const Icons = {
+            Volume2: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            ),
+            Mic: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+            ),
+            Check: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12"></polyline></svg>
+            ),
+            RotateCcw: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M1 4v6h6"></path><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+            ),
+            Globe: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            ),
+            HelpCircle: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            ),
+            GripVertical: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle><circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle></svg>
+            ),
+            Settings: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            ),
+            X: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            )
+        };
+
+        // --- Data for Speed Reading 3 ---
+
+        const STORY_DATA = [
+            {
+                id: 'intro',
+                title: 'Introduction (1 & 2)',
+                sentences: [
+                    { id: 'i1', en: "In the summer of 1853, George Crum was working at a small restaurant in New York.", jp: "1853年の夏、ジョージ・クラムはニューヨークの小さなレストランで働いていた。" },
+                    { id: 'i2', en: "One day, a customer appeared who didn't like George's French fried potatoes. That customer changed George's life then and there.", jp: "ある日、ジョージの作ったフライドポテトが気に入らないお客が現れた。そのお客がそのときその場でジョージの一生を変えた。" },
+                    { id: 'i3', en: "The waiter went into the kitchen to talk with George.", jp: "ウエイターがジョージと話をするために調理場に入って来た。" },
+                    { id: 'i4', en: "\"One of the customers says that these French-fried potatoes are too thick. Please make some thinner ones,\" the waiter said.", jp: "「お客の一人が、このフライドポテトが厚すぎると言っているよ。お願いだからもっと薄いのを作って。」と、ウエイターは言った。" }
+                ]
+            },
+            {
+                id: 'B',
+                title: 'Part B',
+                sentences: [
+                    { id: 'b1', en: "George was upset to hear that the customer was complaining. But the customer is always right.", jp: "ジョージはお客が文句を言っていると聞いて心中穏やかではなかった。が、お客様は神様である。" },
+                    { id: 'b2', en: "So, George took some potatoes, sliced them thinner than before, fried them, and sent them out to the customer.", jp: "そこでジョージはジャガイモを取り出し、前のよりも薄く切って、揚げて、そのお客に持って行かせた。" },
+                    { id: 'b3', en: "Again the customer complained that they were too thick.", jp: "またもやお客は厚すぎると文句を言った。" }
+                ]
+            },
+            {
+                id: 'C',
+                title: 'Part C',
+                sentences: [
+                    { id: 'c1', en: "When George heard that the customer was still complaining, he became very angry.", jp: "お客がまだ文句を言っていると聞いて、ジョージはたいへん腹を立てた。" },
+                    { id: 'c2', en: "George thought, \"Sending things back to the kitchen once is understandable, but sending the fried potatoes back a second time is too rude.\"", jp: "「一度なら料理を調理場に戻してくるのも理解できるが、フライドポテトを二度もつき返してくるとはあまりにも失礼だ。」と考えたのである。" },
+                    { id: 'c3', en: "Then George took out some potatoes and sliced them as thin as paper to get revenge on the customer.", jp: "するとジョージはジャガイモを取り出し、その客にしっぺ返しをしてやろうと紙のように薄く切った。" },
+                    { id: 'c4', en: "\"He'll be surprised to see these fried potatoes. He won't even be able to use his fork,\" George laughed.", jp: "「あの客はこのフライドポテトを見ればぴっくりするだろうよ。フォークも使えないよ。」と、ジョージは笑った。" }
+                ]
+            },
+            {
+                id: 'A',
+                title: 'Part A',
+                sentences: [
+                    { id: 'a1', en: "When he finished frying the potatoes, they were not like the thick soft fried potatoes which he always made. They were hard and brown.", jp: "揚げ終わると、そのポテトは、彼がいつも作っていた厚い柔らかいフライドポテトとはまるで違っていた。硬くて焦げ茶色になっていた。" },
+                    { id: 'a2', en: "George smiled and was pleased with his \"revenge.\" He then sent them out to the customer.", jp: "ジョージは笑いを浮かべ、彼の「しっぺ返し」に満足した。それから彼はそれらをお客に持って行かせた。" }
+                ]
+            },
+            {
+                id: 'conclusion',
+                title: 'Conclusion (6)',
+                sentences: [
+                    { id: 'co1', en: "The customer, however, was not angry to see the crispy potatoes. In fact, he ate them happily.", jp: "ところが、そのお客はパリパリとしたポテトを見て腹を立てなかった。それどころか、満足そうに食ぺたのである。" },
+                    { id: 'co2', en: "George Crum's \"revenge\" on that one customer became one of the best selling snacks of all time everywhere. Do you know what it is?", jp: "ジョージ・クラムの一人のお客に対する「しっぺ返し」が、あらゆる所で後にも先にもないまれにみる大ヒットのおつまみの一つとなった。さて、それが何だかわかりますか。" }
+                ]
+            }
+        ];
+
+        // Ordering items (Scrambled initially for the quiz)
+        const ORDERING_ITEMS = [
+            { id: 'A', content: "When he finished frying the potatoes, they were not like the thick soft fried potatoes which he always made. They were hard and brown. George smiled and was pleased with his \"revenge.\"" },
+            { id: 'B', content: "George was upset to hear that the customer was complaining. But the customer is always right. So, George took some potatoes, sliced them thinner than before..." },
+            { id: 'C', content: "When George heard that the customer was still complaining, he became very angry... George took out some potatoes and sliced them as thin as paper to get revenge..." }
+        ];
+
+        // --- Helper Functions ---
+
+        const calculateSimilarity = (str1, str2) => {
+            if (!str1 || !str2) return 0;
+            const normalize = (s) => s.toLowerCase().replace(/[^\w\s]/g, '').trim();
+            const s1 = normalize(str1).split(/\s+/);
+            const s2 = normalize(str2).split(/\s+/);
+            
+            const intersection = s1.filter(word => s2.includes(word));
+            const score = Math.round((intersection.length / Math.max(s1.length, s2.length)) * 100);
+            return Math.min(100, Math.max(0, score));
+        };
+
+        // --- Components ---
+
+        const TabButton = ({ active, onClick, children }) => (
+            <button
+                onClick={onClick}
+                className={`px-6 py-3 md:px-8 md:py-4 rounded-t-xl font-bold text-lg md:text-xl transition-colors whitespace-nowrap ${
+                active 
+                    ? 'bg-blue-600 text-white shadow-lg z-10' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+            >
+                {children}
+            </button>
+        );
+
+        // --- Ordering Quiz Component ---
+        function OrderingQuiz() {
+            const [items, setItems] = useState(ORDERING_ITEMS);
+            const [isCorrect, setIsCorrect] = useState(null);
+            
+            const introText = STORY_DATA.find(s => s.id === 'intro')?.sentences.map(s => s.en).join(' ');
+            const conclusionText = STORY_DATA.find(s => s.id === 'conclusion')?.sentences.map(s => s.en).join(' ');
+
+            const handleDragStart = (e, index) => {
+                e.dataTransfer.setData('text/plain', index.toString());
+            };
+
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const handleDrop = (e, dropIndex) => {
+                e.preventDefault();
+                const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                if (dragIndex === dropIndex) return;
+                if (isNaN(dragIndex)) return;
+
+                const newItems = [...items];
+                const [draggedItem] = newItems.splice(dragIndex, 1);
+                newItems.splice(dropIndex, 0, draggedItem);
+                
+                setItems(newItems);
+                setIsCorrect(null);
+            };
+
+            const checkOrder = () => {
+                const currentOrderIds = items.map(item => item.id).join('');
+                // Correct Order: B -> C -> A
+                if (currentOrderIds === 'BCA') {
+                    setIsCorrect(true);
+                } else {
+                    setIsCorrect(false);
+                }
+            };
+
+            return (
+                <div className="space-y-10 animate-fade-in">
+                    <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-200">
+                        <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                            <Icons.HelpCircle className="w-8 h-8 text-blue-500" />
+                            Question 1: Reorder the paragraphs
+                        </h2>
+                        <p className="text-2xl text-gray-700 mb-10 leading-relaxed">
+                            The story begins with parts 1 & 2 and ends with part 6. <br/>
+                            Drag and drop <span className="font-bold text-blue-600">A</span>, <span className="font-bold text-blue-600">B</span>, and <span className="font-bold text-blue-600">C</span> to complete the story.
+                        </p>
+
+                        {/* Static Intro */}
+                        <div className="bg-gray-100 p-8 rounded-xl border-l-8 border-blue-400 mb-8">
+                            <span className="font-bold text-blue-800 text-2xl block mb-3">1 & 2 (Start)</span>
+                            <p className="text-2xl leading-loose text-gray-900">{introText}</p>
+                        </div>
+
+                        {/* Draggable Area */}
+                        <div className="space-y-6 pl-4 md:pl-10 border-l-4 border-dashed border-gray-300 py-6">
+                            {items.map((item, index) => (
+                                <div
+                                    key={item.id}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, index)}
+                                    onDragOver={handleDragOver}
+                                    onDrop={(e) => handleDrop(e, index)}
+                                    className="flex items-start gap-6 p-6 bg-white border-2 border-gray-200 rounded-xl cursor-move hover:border-blue-400 hover:shadow-lg transition-all active:cursor-grabbing group"
+                                >
+                                    <div className="flex flex-col items-center justify-center pt-2 text-gray-400 group-hover:text-blue-500">
+                                        <Icons.GripVertical className="w-8 h-8" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <span className="inline-block px-4 py-2 mb-3 text-lg font-bold text-white bg-blue-500 rounded-lg">
+                                            {item.id}
+                                        </span>
+                                        <p className="text-2xl text-gray-900 leading-loose">{item.content}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Static Conclusion */}
+                        <div className="bg-gray-100 p-8 rounded-xl border-l-8 border-blue-400 mt-8">
+                            <span className="font-bold text-blue-800 text-2xl block mb-3">6 (End)</span>
+                            <p className="text-2xl leading-loose text-gray-900">{conclusionText}</p>
+                        </div>
+
+                        <div className="mt-12 flex items-center gap-8">
+                            <button
+                                onClick={checkOrder}
+                                className="flex items-center gap-3 px-10 py-5 bg-blue-600 text-white text-xl rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg active:transform active:scale-95"
+                            >
+                                Check Order
+                            </button>
+                            
+                            {isCorrect === true && (
+                                <div className="flex items-center gap-3 text-green-600 font-bold text-2xl animate-pulse">
+                                    <Icons.Check className="w-10 h-10" />
+                                    Correct! (1,2 → B → C → A → 6)
+                                </div>
+                            )}
+                            {isCorrect === false && (
+                                <div className="flex items-center gap-3 text-red-500 font-bold text-2xl">
+                                    <Icons.RotateCcw className="w-8 h-8" />
+                                    Try again. Pay attention to the customer's complaints and George's reaction.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Comprehension Quiz Component (True/False) ---
+        function ComprehensionQuiz() {
+            const questions = [
+                { id: 'ア', text: "The customer complained that George's French-fried potatoes were too hard.", answer: false, explanation: "False. The customer complained they were too thick." },
+                { id: 'イ', text: "At first, George thought he should always show respect to customers even if they were unreasonable or unpleasant.", answer: true, explanation: "True. He believed 'the customer is always right' initially." },
+                { id: 'ウ', text: "George got very angry when he talked with the customer.", answer: false, explanation: "False. George talked with the waiter, not directly with the customer." },
+                { id: 'エ', text: "George fried potatoes three times for the customer.", answer: true, explanation: "True. 1st (thick), 2nd (thinner), 3rd (paper-thin)." },
+                { id: 'オ', text: "The customer liked George's French-fried potatoes because they were thick and soft.", answer: false, explanation: "False. The customer liked them because they were crispy." },
+                { id: 'カ', text: "The snacks which were first made by George Crum are very popular now.", answer: true, explanation: "True. Potato chips are very popular worldwide." }
+            ];
+
+            const [userAnswers, setUserAnswers] = useState({}); // { index: boolean }
+            const [submitted, setSubmitted] = useState(false);
+
+            const handleAnswer = (index, value) => {
+                setUserAnswers(prev => ({ ...prev, [index]: value }));
+            };
+
+            const calculateScore = () => {
+                let score = 0;
+                questions.forEach((q, index) => {
+                    if (userAnswers[index] === q.answer) score++;
+                });
+                return score;
+            };
+
+            const isAllAnswered = Object.keys(userAnswers).length === questions.length;
+
+            return (
+                <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
+                    <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-gray-200">
+                        <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">
+                            <Icons.HelpCircle className="w-8 h-8 text-blue-500" />
+                            Question 2: True or False
+                        </h2>
+                        <p className="text-2xl text-gray-700 mb-10 leading-relaxed">
+                            本文の内容と合っているものには <span className="font-bold text-green-600">True (T)</span>、合っていないものには <span className="font-bold text-red-500">False (F)</span> を選びなさい。
+                        </p>
+
+                        <div className="space-y-6">
+                            {questions.map((q, index) => (
+                                <div key={index} className="p-6 rounded-xl border-2 border-gray-100 hover:border-blue-100 transition-colors bg-gray-50">
+                                    <div className="flex flex-col gap-4">
+                                        <div className="flex items-start gap-4">
+                                            <span className="font-bold text-xl text-blue-600 mt-1">({q.id})</span>
+                                            <p className="text-xl text-gray-900 font-medium leading-relaxed">{q.text}</p>
+                                        </div>
+                                        
+                                        <div className="flex gap-4 ml-0 md:ml-12 mt-2">
+                                            <button
+                                                onClick={() => !submitted && handleAnswer(index, true)}
+                                                className={`flex-1 py-3 px-4 rounded-lg font-bold text-lg transition-all ${
+                                                    userAnswers[index] === true
+                                                        ? 'bg-green-600 text-white shadow-md'
+                                                        : 'bg-white border-2 border-gray-200 text-gray-500 hover:bg-green-50'
+                                                } ${submitted ? 'cursor-default opacity-90' : ''}`}
+                                            >
+                                                True (T)
+                                            </button>
+                                            <button
+                                                onClick={() => !submitted && handleAnswer(index, false)}
+                                                className={`flex-1 py-3 px-4 rounded-lg font-bold text-lg transition-all ${
+                                                    userAnswers[index] === false
+                                                        ? 'bg-red-500 text-white shadow-md'
+                                                        : 'bg-white border-2 border-gray-200 text-gray-500 hover:bg-red-50'
+                                                } ${submitted ? 'cursor-default opacity-90' : ''}`}
+                                            >
+                                                False (F)
+                                            </button>
+                                        </div>
+
+                                        {/* Result Feedback */}
+                                        {submitted && (
+                                            <div className={`mt-4 ml-0 md:ml-12 p-4 rounded-lg ${
+                                                userAnswers[index] === q.answer ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                <div className="flex items-start gap-2">
+                                                    {userAnswers[index] === q.answer ? (
+                                                        <Icons.Check className="w-6 h-6 flex-shrink-0 mt-1" />
+                                                    ) : (
+                                                        <Icons.X className="w-6 h-6 flex-shrink-0 mt-1" />
+                                                    )}
+                                                    <div>
+                                                        <span className="font-bold">{userAnswers[index] === q.answer ? 'Correct!' : 'Incorrect.'}</span>
+                                                        <p className="mt-1">{q.explanation}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {!submitted && (
+                            <button
+                                onClick={() => setSubmitted(true)}
+                                disabled={!isAllAnswered}
+                                className="mt-12 w-full py-5 bg-blue-600 text-white text-xl rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-lg disabled:bg-gray-300 disabled:cursor-not-allowed"
+                            >
+                                Check Answers
+                            </button>
+                        )}
+
+                        {submitted && (
+                            <div className="mt-12 p-8 bg-blue-50 rounded-2xl text-center animate-fade-in border border-blue-200">
+                                <h3 className="text-3xl font-bold text-blue-900 mb-2">
+                                    Score: {calculateScore()} / {questions.length}
+                                </h3>
+                                <p className="text-xl text-blue-700">
+                                    {calculateScore() === questions.length ? "Perfect! You understood the story well." : "Review the explanations above to learn more."}
+                                </p>
+                                <button 
+                                    onClick={() => {
+                                        setSubmitted(false);
+                                        setUserAnswers({});
+                                    }}
+                                    className="mt-6 px-8 py-3 bg-white text-blue-600 font-bold rounded-full shadow hover:bg-gray-50 transition-colors"
+                                >
+                                    Try Again
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Reading Practice Component ---
+        
+        function PracticeCard({ sentence, showTranslation, selectedVoice }) {
+            const [isRecording, setIsRecording] = useState(false);
+            const [score, setScore] = useState(null);
+            const [recognizedText, setRecognizedText] = useState('');
+            const recognitionRef = useRef(null);
+
+            const playAudio = () => {
+                const utterance = new SpeechSynthesisUtterance(sentence.en);
+                utterance.lang = 'en-US';
+                utterance.rate = 1.0; 
+
+                // Apply selected voice if available
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(utterance);
+            };
+
+            const toggleRecording = () => {
+                if (isRecording) {
+                    if (recognitionRef.current) {
+                        recognitionRef.current.stop();
+                    }
+                    setIsRecording(false);
+                } else {
+                    startRecording();
+                }
+            };
+
+            const startRecording = () => {
+                if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                    alert("Your browser does not support speech recognition. Please try Chrome.");
+                    return;
+                }
+
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                recognitionRef.current = new SpeechRecognition();
+                recognitionRef.current.lang = 'en-US';
+                recognitionRef.current.continuous = false;
+                recognitionRef.current.interimResults = false;
+
+                recognitionRef.current.onstart = () => {
+                    setIsRecording(true);
+                    setScore(null);
+                    setRecognizedText('');
+                };
+
+                recognitionRef.current.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    setRecognizedText(transcript);
+                    const calculatedScore = calculateSimilarity(sentence.en, transcript);
+                    setScore(calculatedScore);
+                    setIsRecording(false);
+                };
+
+                recognitionRef.current.onerror = (event) => {
+                    console.error(event.error);
+                    setIsRecording(false);
+                };
+
+                recognitionRef.current.onend = () => {
+                    setIsRecording(false);
+                };
+
+                recognitionRef.current.start();
+            };
+
+            return (
+                <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg transition-shadow">
+                    <div className="flex flex-col md:flex-row gap-8">
+                        {/* Left: Text Content */}
+                        <div className="flex-1 space-y-4">
+                            <p className="text-3xl text-gray-900 leading-loose font-medium">
+                                {sentence.en}
+                            </p>
+                            
+                            <div className={`overflow-hidden transition-all duration-300 ${showTranslation ? 'max-h-60 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                <p className="text-xl text-gray-600 border-l-4 border-gray-300 pl-5 py-2 mt-4 leading-relaxed">
+                                    {sentence.jp}
+                                </p>
+                            </div>
+
+                            {score !== null && (
+                                <div className={`mt-6 p-6 rounded-xl text-lg ${score > 80 ? 'bg-green-50 text-green-800' : 'bg-orange-50 text-orange-800'}`}>
+                                    <div className="flex items-center gap-4 mb-2">
+                                        <span className="font-bold text-2xl">Score: {score}/100</span>
+                                        <span className="text-xl opacity-85">
+                                            {score > 80 ? "Great job!" : "Keep practicing!"}
+                                        </span>
+                                    </div>
+                                    <p className="text-lg italic opacity-90">You said: "{recognizedText}"</p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Right: Controls */}
+                        <div className="flex md:flex-col gap-4 flex-shrink-0 pt-2 justify-center md:justify-start">
+                            <button
+                                onClick={playAudio}
+                                className="p-5 bg-blue-50 text-blue-600 rounded-full hover:bg-blue-100 transition-colors shadow-sm"
+                                title="Listen"
+                            >
+                                <Icons.Volume2 className="w-10 h-10" />
+                            </button>
+                            
+                            <button
+                                onClick={toggleRecording}
+                                className={`p-5 rounded-full transition-all shadow-sm ${
+                                    isRecording 
+                                        ? 'bg-red-100 text-red-600 animate-pulse ring-4 ring-red-200' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                title={isRecording ? "Stop Recording" : "Start Recording"}
+                            >
+                                <Icons.Mic className="w-10 h-10" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function ReadingPractice() {
+            const [showTranslation, setShowTranslation] = useState(true);
+            const [voices, setVoices] = useState([]);
+            const [selectedVoice, setSelectedVoice] = useState(null);
+            
+            // Centralized Voice Loading Logic
+            useEffect(() => {
+                const loadVoices = () => {
+                    let availableVoices = window.speechSynthesis.getVoices();
+                    
+                    // Filter for English voices only
+                    availableVoices = availableVoices.filter(v => v.lang.startsWith('en'));
+
+                    setVoices(availableVoices);
+
+                    if (availableVoices.length > 0) {
+                        const preferredVoice = 
+                            availableVoices.find(v => v.name === 'Google US English') ||
+                            availableVoices.find(v => v.name === 'Google UK English Female') ||
+                            availableVoices.find(v => v.name.includes('Google') && v.lang.includes('en-US')) ||
+                            availableVoices.find(v => v.name.includes('Natural') && v.lang.includes('en')) ||
+                            availableVoices.find(v => v.name.includes('Samantha')) ||
+                            availableVoices.find(v => v.name.includes('Zira')) ||
+                            availableVoices.find(v => v.lang === 'en-US') ||
+                            availableVoices[0];
+                        
+                        setSelectedVoice(preferredVoice);
+                    }
+                };
+
+                loadVoices();
+                
+                // Chrome handles this asynchronously
+                if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                    window.speechSynthesis.onvoiceschanged = loadVoices;
+                }
+                
+                return () => {
+                    window.speechSynthesis.onvoiceschanged = null;
+                };
+            }, []);
+
+            return (
+                <div className="space-y-10 animate-fade-in">
+                    <div className="flex flex-col md:flex-row justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-200 sticky top-0 z-10 gap-4">
+                        <div className="flex items-center gap-4">
+                             <h2 className="text-3xl font-bold text-gray-900">Practice</h2>
+                             
+                             {/* Voice Selection UI */}
+                             <div className="relative">
+                                <div className="flex items-center gap-2 bg-gray-100 px-3 py-2 rounded-lg border border-gray-300">
+                                    <Icons.Settings className="w-5 h-5 text-gray-500" />
+                                    <select 
+                                        className="bg-transparent text-sm font-medium text-gray-700 outline-none w-48 md:w-64 cursor-pointer"
+                                        value={selectedVoice ? selectedVoice.name : ''}
+                                        onChange={(e) => {
+                                            const voice = voices.find(v => v.name === e.target.value);
+                                            setSelectedVoice(voice);
+                                        }}
+                                    >
+                                        {voices.length === 0 && <option>Loading voices...</option>}
+                                        {voices.map(v => (
+                                            <option key={v.name} value={v.name}>
+                                                {v.name} ({v.lang})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                             </div>
+                        </div>
+
+                        <button
+                            onClick={() => setShowTranslation(!showTranslation)}
+                            className="flex items-center gap-3 px-8 py-3 text-lg font-bold text-blue-600 bg-blue-50 rounded-full hover:bg-blue-100 transition-colors whitespace-nowrap"
+                        >
+                            <Icons.Globe className="w-6 h-6" />
+                            {showTranslation ? 'Hide Japanese' : 'Show Japanese'}
+                        </button>
+                    </div>
+
+                    <div className="space-y-12 pb-16">
+                        {STORY_DATA.map((section) => (
+                            <div key={section.id} className="space-y-8">
+                                {section.id !== 'intro' && section.id !== 'conclusion' && (
+                                    <div className="flex items-center gap-6 my-10">
+                                        <div className="h-px bg-gray-300 flex-1"></div>
+                                        <span className="text-xl font-bold text-gray-500 uppercase tracking-widest">{section.title}</span>
+                                        <div className="h-px bg-gray-300 flex-1"></div>
+                                    </div>
+                                )}
+                                
+                                {section.sentences.map((sentence) => (
+                                    <PracticeCard 
+                                        key={sentence.id} 
+                                        sentence={sentence} 
+                                        showTranslation={showTranslation} 
+                                        selectedVoice={selectedVoice}
+                                    />
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Main App Component ---
+
+        function App() {
+            const [activeTab, setActiveTab] = useState('sort');
+
+            return (
+                <div className="min-h-screen p-4 md:p-8 max-w-7xl mx-auto">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden min-h-[700px] flex flex-col">
+                        {/* Header */}
+                        <header className="bg-blue-600 text-white p-8">
+                            <h1 className="text-4xl font-bold tracking-wide">English Speed Reading 3: Potato Chips</h1>
+                            <p className="text-blue-100 mt-3 text-2xl">2025 Winter Course - Speed Reading 3</p>
+                        </header>
+
+                        {/* Navigation */}
+                        <div className="flex border-b border-gray-200 px-8 pt-6 gap-3 bg-white overflow-x-auto">
+                            <TabButton active={activeTab === 'sort'} onClick={() => setActiveTab('sort')}>
+                                1. Ordering
+                            </TabButton>
+                            <TabButton active={activeTab === 'quiz'} onClick={() => setActiveTab('quiz')}>
+                                2. Comprehension
+                            </TabButton>
+                            <TabButton active={activeTab === 'read'} onClick={() => setActiveTab('read')}>
+                                3. Reading Practice
+                            </TabButton>
+                        </div>
+
+                        {/* Content Area */}
+                        <main className="flex-1 p-6 md:p-10 bg-gray-50">
+                            {activeTab === 'sort' && <OrderingQuiz />}
+                            {activeTab === 'quiz' && <ComprehensionQuiz />}
+                            {activeTab === 'read' && <ReadingPractice />}
+                        </main>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- Mount ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
